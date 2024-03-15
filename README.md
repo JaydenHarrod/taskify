@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+## Turso x Prisma
+
+This project uses Turso to host the database. See more about using Turso in Prisma here: https://www.prisma.io/docs/orm/overview/databases/turso
+
+To update your database schema:
+
+- Generate a migration file using `prisma migrate dev` against a local SQLite database:
+
+Apply the migration using Turso's CLI:
+
+`turso db shell turso-prisma-db < ./prisma/migrations/20230922132717_init/migration.sql`
+
+_Replace 20230922132717_init with the name of your migration._
