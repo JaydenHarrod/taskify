@@ -5,6 +5,10 @@ import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { ListWithCards } from "@/types";
 import { ListForm } from "./list-form";
 import { ListItem } from "./list-item";
+import { useAction } from "@/hooks/use-action";
+import { updateListOrder } from "@/actions/update-list-order";
+import { toast } from "sonner";
+import { updateCardOrder } from "@/actions/update-card-order";
 
 interface ListContainerProps {
   data: ListWithCards[];
@@ -20,6 +24,24 @@ function reorder<T>(list: T[], startIndex: number, endIndex: number) {
 
 export const ListContainer = ({ data, boardId }: ListContainerProps) => {
   const [orderedLists, setOrderedLists] = useState(data);
+
+  const { execute: executeUpdateListOrder } = useAction(updateListOrder, {
+    onSuccess: () => {
+      toast.success("List reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  const { execute: executeUpdateCardOrder } = useAction(updateCardOrder, {
+    onSuccess: () => {
+      toast.success("Card reordered");
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
 
   useEffect(() => {
     setOrderedLists(data);
@@ -46,7 +68,10 @@ export const ListContainer = ({ data, boardId }: ListContainerProps) => {
         (list, index) => ({ ...list, order: index })
       );
       setOrderedLists(items);
-      // TODO: trigger server action
+      executeUpdateListOrder({
+        items,
+        boardId,
+      });
     }
 
     // User moves a card
@@ -90,9 +115,12 @@ export const ListContainer = ({ data, boardId }: ListContainerProps) => {
         sourceList.cards = items;
 
         setOrderedLists(newOrderedList);
-        // TODO: trigger server action
-        // User moves the card to another list
+        executeUpdateCardOrder({
+          items,
+          boardId,
+        });
       } else {
+        // User moves the card to another list
         const [removed] = sourceList.cards.splice(source.index, 1);
         removed.listId = destination.droppableId;
         destinationList.cards.splice(destination.index, 0, removed);
@@ -106,6 +134,10 @@ export const ListContainer = ({ data, boardId }: ListContainerProps) => {
         });
 
         setOrderedLists(newOrderedList);
+        executeUpdateCardOrder({
+          items: [...sourceList.cards, ...destinationList.cards],
+          boardId,
+        });
         // TODO: trigger server action
       }
     }
