@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { createAuditLog } from "@/lib/create-audit-log";
 
 import { CopyCard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -60,6 +61,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         listId: cardToCopy.listId,
         order: newOrder,
       },
+    });
+
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: "CARD",
+      action: "CREATE",
     });
   } catch (error) {
     return {

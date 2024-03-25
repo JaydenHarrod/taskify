@@ -1,10 +1,13 @@
 "use server";
 
 import { auth } from "@clerk/nextjs";
-import { InputType, ReturnType } from "./types";
-import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+
+import { db } from "@/lib/db";
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
+
+import { InputType, ReturnType } from "./types";
 import { UpdateBoard } from "./schema";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -28,6 +31,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       data: {
         title,
       },
+    });
+
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: "BOARD",
+      action: "UPDATE",
     });
   } catch (error) {
     return {

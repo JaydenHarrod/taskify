@@ -1,10 +1,12 @@
 "use server";
 
 import { auth } from "@clerk/nextjs";
-import { InputType, ReturnType } from "./types";
-import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+
+import { db } from "@/lib/db";
+import { createAuditLog } from "@/lib/create-audit-log";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { InputType, ReturnType } from "./types";
 import { CreateCard } from "./schema";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -55,6 +57,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         listId,
         order: newOrder,
       },
+    });
+
+    await createAuditLog({
+      entityId: card.id,
+      entityTitle: card.title,
+      entityType: "CARD",
+      action: "CREATE",
     });
   } catch (error) {
     return {

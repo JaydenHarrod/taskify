@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { createAuditLog } from "@/lib/create-audit-log";
 
 import { DeleteBoard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -28,6 +29,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         id,
         orgId,
       },
+    });
+
+    await createAuditLog({
+      entityTitle: board.title,
+      entityId: board.id,
+      entityType: "BOARD",
+      action: "DELETE",
     });
   } catch (error) {
     return {

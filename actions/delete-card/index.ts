@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { createAuditLog } from "@/lib/create-audit-log";
 
 import { DeleteCard } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -31,6 +32,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           },
         },
       },
+    });
+
+    await createAuditLog({
+      entityTitle: card.title,
+      entityId: card.id,
+      entityType: "CARD",
+      action: "DELETE",
     });
   } catch (error) {
     return {
