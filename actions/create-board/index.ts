@@ -8,6 +8,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { createAuditLog } from "@/lib/create-audit-log";
 import { InputType, ReturnType } from "./types";
 import { CreateBoard } from "./schema";
+import { hasAvailableBoards, incrementBoardLimit } from "@/lib/org-limit";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, orgId } = auth();
@@ -15,6 +16,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   if (!userId || !orgId) {
     return {
       error: "Not authorized",
+    };
+  }
+
+  const canCreate = await hasAvailableBoards();
+
+  if (!canCreate) {
+    return {
+      error: "You have reached the limit of boards for this organization.",
     };
   }
 
@@ -49,6 +58,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         imageLinkHTML,
       },
     });
+
+    await incrementBoardLimit();
 
     await createAuditLog({
       entityTitle: board.title,
