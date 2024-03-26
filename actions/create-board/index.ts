@@ -9,6 +9,7 @@ import { createAuditLog } from "@/lib/create-audit-log";
 import { InputType, ReturnType } from "./types";
 import { CreateBoard } from "./schema";
 import { hasAvailableBoards, incrementBoardLimit } from "@/lib/org-limit";
+import { checkSubscription } from "@/lib/subscription";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, orgId } = auth();
@@ -20,8 +21,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   const canCreate = await hasAvailableBoards();
+  const isPro = await checkSubscription();
 
-  if (!canCreate) {
+  if (!canCreate && !isPro) {
     return {
       error: "You have reached the limit of boards for this organization.",
     };
@@ -59,7 +61,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       },
     });
 
-    await incrementBoardLimit();
+    if (!isPro) {
+      await incrementBoardLimit();
+    }
 
     await createAuditLog({
       entityTitle: board.title,
